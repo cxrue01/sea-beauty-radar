@@ -1,0 +1,117 @@
+# 项目进度（PROGRESS）
+
+> 记录项目当前进度和关键决定。基于开源项目 [learn-from-github](https://github.com/viviannnl/learn-from-github) 改造。
+
+## 项目概况
+
+东南亚美妆出海雷达：每周自动抓取东南亚 6 国（越南优先）当地语言新闻 → AI 筛选/分类/三段式解读 → Dashboard（网页）+ 每周邮件周刊。
+
+## 已完成
+
+### 阶段 1：环境检查 + 跑通原项目 ✅
+- Node v24 满足要求；原项目已克隆到本目录，示例数据跑通（本地 `http://localhost:3000`）。
+
+### 阶段 2：数据源 + 关键词 + 品牌名单 ✅（基本完成）
+- 关键词：6 国（越南最全），见 `config/keywords.ts`。
+- 品牌名单：公开版 `config/brands.ts`（16 个）+ 私人版模板 `config/brands.local.example.ts`。
+- 数据源插槽：`config/sources.ts`，3 种类型：`google_news` / `rss` / `google_news_site`。
+- 抓取逻辑：`lib/fetch.ts`（统一格式 + URL 去重 + 7 天过滤 + 报错响亮不崩）。
+- 测试脚本：`scripts/fetch-news.ts`（`--vn` 只跑越南）。
+
+### 数据源 + 最近 7 天条数（2026-09-29 实测）
+
+| 数据源 | 类型 | 7 天内（去重后） |
+|---|---|---|
+| Google News 越南 | google_news | 80 |
+| Google News 印尼 | google_news | 22 |
+| Google News 泰国 | google_news | 9 |
+| Google News 菲律宾 | google_news | 4 |
+| Google News 马来西亚 | google_news | 9 |
+| Google News 新加坡 | google_news | 8 |
+| 白鲸出海 | rss | 0 ⚠️ |
+| 亿邦动力 | google_news_site | 12 |
+| 36氪 | google_news_site | 5 |
+| 雨果网 | google_news_site | 1 |
+| **合计** | | **150** |
+
+### 阶段 3：AI 筛选 + 分类 + 三段式解读 ✅
+- 服务商切换：`lib/llm.ts`（默认 DeepSeek，可切 Anthropic；JSON 输出模式 + 格式校验 + 失败重试一次、再失败记录跳过）。
+- 分析逻辑：`lib/analyze.ts`（筛选分类 → 标题相似合并 → 三段式解读 → 每周汇总）。
+- 测试脚本：`scripts/test-analyze.ts`（`--vn` / `--limit N` / `--per-country N`）。
+- 政策类新增第 6 类「执法与打假」；标题相似合并只在同国家内做，合并组分类不一致时对代表标题重分类一次。
+- 边界规则：品牌涉诉（合规/货源/执法保留，仅私事丢弃）；中国品牌整体趋势保留归市场格局；解读中数字保留原文+中文换算。
+- 测试：越南 15 条 + 6 国各 5 条两轮，分类准、不编造、无关内容正确丢弃，验收通过。
+- 以上规则已完整同步进 SPEC.md 第 9 节。
+
+### 阶段 4：改造 Dashboard ✅
+- 数据落库：新增 `Item` 模型（说明书 10.1）、改造 `Issue` 模型（10.2），删除旧 `Repo`/`RepoLocale`/`Subscriber`。
+- 页面：首页重定向到最新一周；`/week/[周]` 周视图（本周 3 件事 / 进入政策 / 市场动态 + 周切换 + 筛选）；`/item/[id]` 详情页；`/newsletter` 往期列表 + `/newsletter/[周]` 网页版周刊。
+- 周切换用「周一日期」作标识（沿用阶段 2/3 的 `weekOf`），标题显示日期范围「9/21 – 9/27」，网址形如 `/week/2026-09-28`。
+- 筛选做成网址参数（国家/板块/类别/品牌/层级/资本），切周时条件不丢。
+- 品牌层级/资本标签在显示时动态解析（不落库，保证云端数据不泄露 direct/own）。
+- 示例数据：`scripts/seed-demo.ts` 插入连续两周（13+12 条）+ 两期周刊，品牌虚构、标注「示例数据」。
+- 改名：项目 `beautytrend`、副标题 `东南亚美妆出海雷达`、周刊 `sensebeauty周报`（用户确认拼写）；页面/邮件/README 里的 LearnFromGithub 已全部替换；README 保留「基于 learn-from-github 改造」署名。
+- 删除旧文件：`lib/ai.ts`、`lib/github.ts`、`lib/locale.ts`、`lib/server-locale.ts`、`scripts/run-pipeline.ts`、`scripts/backfill-locale.ts`、`components/RepoCard.tsx`、`components/SubscribeForm.tsx`、`components/LocaleToggle.tsx`、`app/api/subscribe/route.ts`。
+- 验证：`tsc --noEmit` 通过；dev 服务器下所有页面 200；`country=VN` 筛选后 4 条、`section=policy` 筛选后 3 条，筛选生效。
+
+### 首页折叠 + 总览页（2026-09-30）
+
+- 首页改回**单栏布局**（去掉右侧筛选栏），新增折叠：「进入政策」「市场动态」区块可折叠（默认展开）；市场动态内每个国家分组可折叠（越南默认展开、其他收起，收起显示「国旗 国家名 · N 条」）。
+- 新增「总览」页 `/overview`：跨周查看，可切「进入政策 / 市场动态」+ 时间范围「近 4 周 / 近 3 个月 / 全部」，筛选与首页一致，按国家分组、最新在前，复用首页卡片与筛选组件。导航改为「首页 ｜ 总览 ｜ 往期周刊」。
+- 抽出 `lib/items.ts`（FilterState / matches / groupByCountry / sortNewest）供首页和总览共用。
+
+### 阶段 5：改造周刊 ✅（2026-09-30）
+
+- 重写 `lib/email.ts`：`buildSubject`（主题「sensebeauty周报 · 第 X 期（9/21 – 9/27）」）+ `buildEmailHtml`（本周 3 件事 / 进入政策 / 各国动态，香槟金暗色、每条一句话 + 查看解读链接）+ `sendIssue`（读 `RECIPIENT_EMAIL`，无 `RESEND_API_KEY` 时 dry run 只打印不发送）。
+- 新建 `scripts/send-newsletter.ts`：`npm run newsletter:send`，支持 `--week`（指定周次）/ `--dry`（强制演练）/ `--dump=文件`（导出 HTML）。阶段 6 的 GitHub Actions 会调用它。
+- env 对齐：`.env.example` 和本地 `.env` 统一用 `RECIPIENT_EMAIL`（原来叫 `NEWSLETTER_TO`），并补 `RESEND_API_KEY` / `SITE_URL`。
+- 删除 `lib/markdown.ts`（旧邮件用的 markdown 渲染，已无引用）。
+- 修 `seed-demo.ts`：补 `issue.deleteMany`，否则旧 seed 的 issue 残留、导致「最新一期没 item」。
+- 验证：`tsc --noEmit` 通过；dry run 输出第 2 期 9/21–9/27（3 政策 + 10 市场 = 13 条），邮件 HTML 结构正确（政策项显示「[高影响] 🇻🇳 越南 · … → 查看解读」）。
+- 真实发送已测通：用 Resend 免费测试发件人 `onboarding@resend.dev`（`NEWSLETTER_FROM`）成功发到自己的收件邮箱（已脱敏），用户已确认收到（内容为示例数据）。正式上线需换验证域名 + 部署后改 `SITE_URL`（邮件里的「查看解读」链接现在指向 localhost）。
+
+## 关键决定
+
+1. **数据持久化**：数据存回 GitHub 仓库（方案①）。云端流水线写 `data/prod.db` 并提交回仓库；本地开发用 `data/dev.db`（gitignore，不上传）。
+2. **代理只写在 .env**：`HTTPS_PROXY` 放 `.env`（gitignore，不上传）。本地访问 Google 需要；GitHub Actions（美国服务器）不需要。
+3. **Google News 的 hl 参数**：英文/马来语必须用「语言-地区」写法（`en-PH` / `en-SG` / `ms-MY`），两字母（`en` / `ms`）会返回空。越南/印尼/泰语用两字母（`vi` / `id` / `th`）即可。
+4. **白鲸出海地址**：用 `https://www.baijing.cn/feed`（原 `baijingapp.com` 会 301 跳转）。
+5. **标题相似合并挪到阶段 3**：同一事件多媒体报道时合并成一条、保留所有来源链接，用 AI 判断更准，放阶段 3 做。
+6. **关键词修改**（用户 2026-09-29 确认）：印尼/马来 `serum pemutih`→`serum pencerah`；越南政策加 `công bố mỹ phẩm`、市场加 `mỹ phẩm giả`；各国加"化妆品市场"词；菲律宾/新加坡英文词加国家名。
+7. **品牌名单保密**：私人名单 `config/brands.local.ts` 只留本地（gitignore）；云端只用公开版；存进 GitHub 的数据绝不能出现 `direct`（直接竞品）/ `own`（自家品牌）标签。
+8. **AI 服务商用 DeepSeek**（用户 2026-09-29 确认）：默认 `LLM_PROVIDER=deepseek`（兼容 OpenAI 接口）；保留 `anthropic` 可切换设计（说明书 9.5）。
+9. **上传需确认**：任何上传到 GitHub 的操作（git push、创建仓库、创建 PR 等）都必须先问用户、得到确认才执行。云端流水线每周自动提交数据是产品功能，配置时需用户明确同意。
+10. **收件邮箱保密**：收件邮箱只放本地 `.env`（`RECIPIENT_EMAIL`）和 GitHub Secret（不是 Variable），绝不能出现在任何会上传的文件里。每次 push 前扫描敏感信息（邮箱、key、私人品牌名、direct/own 标签）。
+11. **本地同步命令**：部署前提供 `npm run sync`，把云端提交的 prod.db 拉到本地查看。
+
+## 下一步：重建完整流水线
+
+- `run-pipeline.ts` 在阶段 4 已删，需重建：抓取 → AI 分析 → 落库 → 发邮件（复用阶段 5 的 `send-newsletter.ts` / `lib/email.ts`）。
+- 先在**本地用真实数据跑通**整条流水线，再配 GitHub Actions（按说明书第 13 节：周一北京时间 8 点定时 + 手动触发，密钥配成 Secrets）。
+
+## 待办 / 注意事项
+
+> **视觉美化暂缓（2026-09-30）**：先暂停视觉美化，继续做阶段 5（周刊）；信号色已定香槟金 `#d6b88f`、内容宽度 1080px，后续再回来继续美化。
+
+> **安全待办**：测试完成后，换一把新的 Resend key（当前这把已在对话里明文出现过，正式使用前换新）。
+
+### ① 首页功能调整
+- 政策条目加国旗国家名：政策列表里每条前显示「🇻🇳 越南」等国家标识。
+- 示例数据改用两个**已过完的周**：9/14–9/20 和 9/21–9/27（当前用的是本周/上周，日期会随运行时间漂移）。
+- 公开版不显示「直接竞品 / 自家品牌」筛选：这两个层级只存在于私人版 `brands.local.ts`，公开版（云端）的筛选下拉里不应出现。
+- 本周 3 件事可点击：目前 top3 只是纯文本，需要能跳到对应的详情页（可能要给 Issue 的 top3 存 item id）。
+- 筛选结果为空时显示提示：例如「没有符合条件的动态」。
+
+### ② 视觉重做
+- 已完成首页**深色主题**重做：暖深炭灰底（`#1c1a18`）+ 香槟金信号色（`#d6b88f`），方向「苹果简洁 × 财经杂志编辑感」，用 Impeccable 技能辅助。排版结构（衬线「本周 3 件事」大卡、折叠筛选、分区竖条、周切换、国家分组细横线）已落地；详情页 / 周刊页只做了最小 token 换色，未完整重做。
+- 用户反馈：**还不够好看**，下一步继续美化 —— 内容太宽太空、字体不统一。
+- 内容宽度：`max-w-content` 从 45rem（720px）**加宽到 67.5rem（1080px）**（用户觉得 720 太窄、不像完整网页）；筛选字段改 `flex-1` 撑满整行。文章页（详情/周刊）仍用 `max-w-prose` 44rem 保持阅读宽度。
+- ⚠️ 坑：改 `tailwind.config.ts` 里的颜色后**必须重启 dev 服务器**才生效（Next.js dev 不总是自动重编译 tailwind 配置）。清空 `.next` 后 CSS 要等页面首次请求才编译，纯 curl CSS 路径不会触发编译。
+
+### ③ Impeccable 的 gitignore 规则
+- 已把 `.impeccable/`、`.impeccable-live.json`、`.impeccable-live/`、`.impeccable.md` 加进 `.gitignore`（来自 impeccable 官方 .gitignore）✅
+
+### 其他观察
+- 白鲸出海、雨果网 7 天内条数很少（feed 可能更新慢 / site: 搜索按相关度排序），继续观察是否调整。
+- 菲律宾、马来西亚、新加坡 7 天内**相关**新闻偏少（AI 筛选后 PH 0 相关、MY 0 相关、SG 极少），先观察，看是否加关键词或换数据源。
+- 本地抓取依赖代理；GitHub Actions 里不需要代理。

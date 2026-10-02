@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-paper text-ink antialiased;
+  }
+
+  ::selection {
+    @apply bg-accent text-paper;
+  }
+
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent/50 ring-offset-2 ring-offset-paper;
+  }
+
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #3f3b36 transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #3f3b36;
+    border-radius: 9999px;
+    border: 3px solid #1c1a18;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer components {
+  /* Newsletter body rendered from our own Markdown. */
+  .prose-issue {
+    @apply text-[1.0625rem] leading-[1.75] text-ink-soft;
+  }
+  .prose-issue h2 {
+    @apply mb-3 mt-10 text-xl font-semibold text-ink;
+  }
+  .prose-issue h3 {
+    @apply mb-2 mt-8 text-lg font-semibold text-ink;
+  }
+  .prose-issue p {
+    @apply mb-5;
+  }
+  .prose-issue ul,
+  .prose-issue ol {
+    @apply mb-5 space-y-2 pl-5;
+  }
+  .prose-issue ul {
+    @apply list-disc;
+  }
+  .prose-issue ol {
+    @apply list-decimal;
+  }
+  .prose-issue a {
+    @apply text-accent underline decoration-accent/40 underline-offset-2 hover:decoration-accent;
+  }
+  .prose-issue code {
+    @apply rounded bg-paper-tint px-1.5 py-0.5 font-mono text-[0.875em] text-ink;
+  }
+  .prose-issue blockquote {
+    @apply mb-5 border-l-2 border-line-strong pl-4 italic text-ink-muted;
+  }
+  .prose-issue strong {
+    @apply font-semibold text-ink;
+  }
+}

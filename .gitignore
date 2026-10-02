@@ -1,0 +1,35 @@
+# Claude Code local settings
+.claude/settings.local.json
+
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# env
+.env
+.env.local
+.env*.local
+
+# database
+*.db
+*.db-journal
+data/
+
+# private brand list (never upload)
+config/brands.local.ts
+
+# build / cache
+*.tsbuildinfo
+
+# macOS
+.DS_Store
+
+# Impeccable（设计技能运行状态，来自 impeccable 官方 .gitignore）
+.impeccable/
+.impeccable-live.json
+.impeccable-live/
+.impeccable.md

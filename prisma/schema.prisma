@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+/// 一条美妆动态（说明书 10.1）。JSON 形状的字段存成字符串，保持 SQLite / Postgres 可移植。
+model Item {
+  id              String  @id @default(cuid())
+  urls            String // JSON 数组：所有来源链接（合并去重后可能多个）
+  titleOriginal   String // 原文标题
+  snippetOriginal String? // 原文摘要
+  source          String // 来源媒体名称
+  sourceType      String // google_news / rss / google_news_site
+  language        String // 原文语言
+  country         String // VN / ID / TH / PH / MY / SG / multi
+  publishedAt     String? // 发布时间
+
+  section      String  // market / policy
+  category     String  // 类别（中文）
+  brands       String  // JSON 数组：涉及品牌名
+  impactLevel  String? // high / medium / low（仅政策）
+  affected     String? // all / cn_brands / specific（仅政策）
+
+  oneLine      String // 一句话总结
+  whatHappened String // 发生了什么
+  whyItMatters String // 为什么重要
+  implications String // 对中国美妆品牌意味着什么
+
+  week      String   // 所属周（周一日期，如 2026-09-21）
+  isSample  Boolean  @default(false) // 是否示例数据
+  createdAt DateTime @default(now())
+
+  @@index([week])
+  @@index([country])
+}
+
+/// 一期周刊（说明书 10.2）。
+model Issue {
+  id            String   @id @default(cuid())
+  week          String   @unique // 周次
+  issueNumber   Int // 第几期
+  top3          String // JSON 数组：本周 3 件事
+  policySummary String // 政策小结
+  isSample      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+}
