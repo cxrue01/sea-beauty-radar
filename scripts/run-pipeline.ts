@@ -7,6 +7,7 @@
 import 'dotenv/config';
 import { randomUUID } from 'node:crypto';
 import { sources } from '../config/sources';
+import { countries } from '../config/keywords';
 import { fetchSource, dedup, filterByWeek, type NewsItem } from '../lib/fetch';
 import { brandNameMap, loadBrands } from '../lib/brands';
 import {
@@ -23,6 +24,7 @@ import {
 import { prisma } from '../lib/db';
 import { weekOf, previousWeek, formatWeekRange } from '../lib/week';
 import { sendWeekIssue } from '../lib/newsletter';
+import type { RunReport } from '../lib/email';
 
 const CONCURRENCY = 3;
 
@@ -111,9 +113,11 @@ async function main() {
   console.log('===== 流水线启动 =====');
   console.log(`服务商：${process.env.LLM_PROVIDER ?? 'deepseek'}｜发送邮件：${send ? '是' : '否（dry run）'}\n`);
 
-  // 本期覆盖「上一个完整周」（周一到周日），标题显示那一周的日期范围（说明书 6.3 / 11.3）
-  const week = previousWeek(weekOf(new Date()));
-  console.log(`本期周次：${week}（${formatWeekRange(week)}）\n`);
+  // 本期覆盖「上一个完整周」（周一到周日），标题显示那一周的日期范围（说明书 6.3 / 11.3）。
+  // 加 --week=YYYY-MM-DD 可指定回补某一周（回补只存数据、不发邮件）。
+  const weekArg = argValue('week');
+  const week = weekArg ?? previousWeek(weekOf(new Date()));
+  console.log(`本期周次：${week}（${formatWeekRange(week)}）${weekArg ? ' [回补模式]' : ''}\n`);
 
   const brands = await loadBrands();
   const brandNames = brands.map((b) => b.name);
@@ -125,13 +129,16 @@ async function main() {
     : sources.filter((s) => s.enabled);
   console.log(`数据源（${targets.length} 个）：${targets.map((s) => s.name).join('、')}\n`);
 
+  const sourceCounts: { name: string; fetched: number }[] = [];
   const fetched: NewsItem[] = [];
   for (const s of targets) {
     try {
       const items = await fetchSource(s);
       fetched.push(...items);
+      sourceCounts.push({ name: s.name, fetched: items.length });
       console.log(`  ✅ ${s.name}：${items.length} 条`);
     } catch (e) {
+      sourceCounts.push({ name: s.name, fetched: 0 });
       console.error(`  ❌ ${s.name} 失败：${(e as Error).message}`);
     }
   }
@@ -227,6 +234,7 @@ async function main() {
       snippetOriginal: g.snippet || null,
       source: g.sources.join('、') || g.members[0]?.source || '',
       sourceType: g.members[0].sourceType,
+      keyword: g.members[0]?.keyword ?? null,
       language: g.language,
       country: c.country ?? g.country,
       publishedAt: g.publishedAt || null,
@@ -264,6 +272,25 @@ async function main() {
 
   const policyCount = rows.filter((r) => r.section === 'policy').length;
   const marketCount = rows.length - policyCount;
+
+  // 运行报告（附在邮件底部 + 控制台）：各源条数、相关数、政策/市场数、零命中关键词。
+  const hitKeywords = new Set(relevant.filter((r) => r.keyword).map((r) => r.keyword as string));
+  const scopedCountries = new Set(targets.flatMap((s) => s.countries));
+  const zeroHitKeywords: { country: string; keyword: string }[] = [];
+  for (const c of countries) {
+    if (!scopedCountries.has(c.code)) continue;
+    for (const kw of [...c.market, ...c.policy]) {
+      if (!hitKeywords.has(kw)) zeroHitKeywords.push({ country: c.name, keyword: kw });
+    }
+  }
+  const runReport: RunReport = {
+    sources: sourceCounts,
+    relevantTotal: relevant.length,
+    policyCount,
+    marketCount,
+    zeroHitKeywords,
+  };
+
   console.log('\n===== 落库完成 =====');
   console.log(`周次：${week}（${formatWeekRange(week)}）· 第 ${issueNumber} 期`);
   console.log(`入库 ${rows.length} 条（政策 ${policyCount} 条 · 市场 ${marketCount} 条）`);
@@ -273,9 +300,17 @@ async function main() {
   }
   console.log(`政策小结：${policySummary}`);
 
+  // 运行报告（控制台）
+  console.log('\n----- 运行报告 -----');
+  console.log(`数据源抓取：${sourceCounts.map((s) => `${s.name} ${s.fetched} 条`).join(' · ')}`);
+  console.log(`AI 判相关：${relevant.length} 条（政策 ${policyCount} · 市场 ${marketCount}）`);
+  console.log(
+    `零命中关键词（${zeroHitKeywords.length} 个）：${zeroHitKeywords.map((e) => `${e.country} ${e.keyword}`).join('、') || '无'}`,
+  );
+
   // 8. 发邮件
   console.log('\n----- 发送周刊 -----');
-  await sendWeekIssue(week, { dryRun: !send });
+  await sendWeekIssue(week, { dryRun: !send, runReport });
 
   console.log('\n===== 流水线结束 =====');
   console.log('提示：运行 `npm run dev` 后在浏览器打开 http://localhost:3000 查看。');

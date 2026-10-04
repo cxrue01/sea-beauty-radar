@@ -14,10 +14,11 @@ next-env.d.ts
 .env.local
 .env*.local
 
-# database
+# database（prod.db 需要提交回仓库，见关键决定 1；dev.db 等其它 DB 一律忽略）
 *.db
 *.db-journal
-data/
+data/*
+!data/prod.db
 
 # private brand list (never upload)
 config/brands.local.ts

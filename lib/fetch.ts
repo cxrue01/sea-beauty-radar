@@ -18,6 +18,7 @@ export type NewsItem = {
   language: string; // 原文语言
   country: string; // 国家（VN / ID / … / multi）
   publishedAt: string; // 发布时间
+  keyword?: string; // 命中的搜索关键词（google_news 有；rss / site 为空）
 };
 
 // —— 代理：国内访问 Google 需要，GitHub Actions 里不设 ——
@@ -64,7 +65,7 @@ function googleNewsUrl(query: string, hl: string, gl: string, ceid: string): str
   return `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=${hl}&gl=${gl}&ceid=${ceid}`;
 }
 
-function toNewsItem(raw: Parser.Item, source: Source, country: string): NewsItem {
+function toNewsItem(raw: Parser.Item, source: Source, country: string, keyword?: string): NewsItem {
   let title = (raw.title ?? '').trim();
   let sourceName = source.name;
 
@@ -87,6 +88,7 @@ function toNewsItem(raw: Parser.Item, source: Source, country: string): NewsItem
     language: source.language,
     country,
     publishedAt: raw.isoDate ?? raw.pubDate ?? '',
+    keyword,
   };
 }
 
@@ -119,7 +121,7 @@ export async function fetchSource(source: Source): Promise<NewsItem[]> {
       const rawItems = await fetchFeed(
         googleNewsUrl(kw, country.language, country.gl, country.ceid),
       );
-      for (const raw of rawItems) items.push(toNewsItem(raw, source, country.code));
+      for (const raw of rawItems) items.push(toNewsItem(raw, source, country.code, kw));
     } catch (err) {
       console.error(`  ⚠️ 关键词「${kw}」抓取失败：${(err as Error).message}`);
     }
@@ -140,7 +142,7 @@ export async function fetchKeyword(countryCode: string, keyword: string): Promis
     enabled: true,
   };
   const rawItems = await fetchFeed(googleNewsUrl(keyword, country.language, country.gl, country.ceid));
-  return rawItems.map((raw) => toNewsItem(raw, source, country.code));
+  return rawItems.map((raw) => toNewsItem(raw, source, country.code, keyword));
 }
 
 // 去重：同 URL 只留一条（说明书 6.3）

@@ -15,6 +15,7 @@ model Item {
   snippetOriginal String? // 原文摘要
   source          String // 来源媒体名称
   sourceType      String // google_news / rss / google_news_site
+  keyword         String? // 命中的搜索关键词（google_news 才有；用于统计各关键词命中数）
   language        String // 原文语言
   country         String // VN / ID / TH / PH / MY / SG / multi
   publishedAt     String? // 发布时间

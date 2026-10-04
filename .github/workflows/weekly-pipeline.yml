@@ -2,18 +2,24 @@ name: Weekly pipeline
 
 on:
   schedule:
-    # Mondays at 13:00 UTC
-    - cron: '0 13 * * 1'
+    # 每周一北京时间早上 8 点 = 周一 UTC 00:00
+    - cron: '0 0 * * 1'
   workflow_dispatch:
     inputs:
-      send:
-        description: 'Email subscribers after generating the issue'
-        type: boolean
-        default: false
-      limit:
-        description: 'Number of trending repos to analyze'
+      week:
+        description: '回补的周次（周一日期，如 2026-09-14；留空 = 自动用上一个完整周）'
         type: string
-        default: '10'
+        required: false
+        default: ''
+      send:
+        description: '是否发送周刊邮件（回补历史数据时选 false）'
+        type: boolean
+        required: false
+        default: true
+
+# 需要写权限：把 data/prod.db 提交回仓库
+permissions:
+  contents: write
 
 jobs:
   run:
@@ -39,23 +45,31 @@ jobs:
       - name: Run pipeline
         env:
           DATABASE_URL: file:./data/prod.db
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          # GH_PAT (a fine-grained PAT) gets the 5000 req/hr limit; the
-          # workflow's built-in token works too if the secret is absent.
-          GITHUB_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+          LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'deepseek' }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NEWSLETTER_FROM: ${{ vars.NEWSLETTER_FROM }}
-          SITE_URL: ${{ vars.SITE_URL }}
+          SITE_URL: ${{ vars.SITE_URL || 'http://localhost:3000' }}
         run: |
-          ARGS="--limit ${{ inputs.limit || '10' }}"
-          if [ "${{ inputs.send || 'true' }}" = "true" ]; then ARGS="$ARGS --send"; fi
+          ARGS=""
+          if [ -n "${{ inputs.week }}" ]; then ARGS="$ARGS --week=${{ inputs.week }}"; fi
+          SEND="${{ github.event_name == 'schedule' || inputs.send == 'true' }}"
+          if [ "$SEND" = "true" ]; then ARGS="$ARGS --send"; fi
           npx tsx scripts/run-pipeline.ts $ARGS
 
-      # SQLite lives on the runner, so the generated content is uploaded rather
-      # than persisted. Swap DATABASE_URL to a hosted Postgres to keep history.
-      - name: Upload database artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: learn-from-github-db
-          path: data/prod.db
-          retention-days: 30
+      - name: Commit database back
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f data/prod.db ]; then
+            git add data/prod.db
+            if git diff --cached --quiet; then
+              echo "数据库无变化，跳过提交"
+            else
+              git commit -m "chore: 流水线数据 $(date -u +%F)"
+              git push
+            fi
+          else
+            echo "data/prod.db 不存在，跳过提交"
+          fi

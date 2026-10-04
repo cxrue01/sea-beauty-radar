@@ -30,6 +30,15 @@ export type EmailIssue = {
   marketGroups: EmailMarketGroup[];
 };
 
+// 邮件底部的运行报告（只发给自己看，网页上不显示）。
+export type RunReport = {
+  sources: { name: string; fetched: number }[]; // 各数据源抓取条数
+  relevantTotal: number; // AI 判为相关的条数
+  policyCount: number; // 政策条数
+  marketCount: number; // 市场条数
+  zeroHitKeywords: { country: string; keyword: string }[]; // 零命中关键词
+};
+
 // 与 DESIGN.md 一致的配色（香槟金 + 暖深炭灰）。
 const C = {
   paper: '#1c1a18',
@@ -71,7 +80,19 @@ function sectionTitle(text: string): string {
   return `<div style="margin:0 0 12px;font-size:15px;font-weight:600;color:${C.ink};">${text}</div>`;
 }
 
-export function buildEmailHtml(issue: EmailIssue, siteUrl: string = SITE_URL): string {
+// 零命中关键词按国家分组，拼成一行紧凑文本。
+function formatZeroHit(list: RunReport['zeroHitKeywords']): string {
+  if (list.length === 0) return '无';
+  const byCountry = new Map<string, string[]>();
+  for (const e of list) {
+    const arr = byCountry.get(e.country) ?? [];
+    arr.push(e.keyword);
+    byCountry.set(e.country, arr);
+  }
+  return [...byCountry.entries()].map(([c, kws]) => `${c}：${kws.join('、')}`).join('；');
+}
+
+export function buildEmailHtml(issue: EmailIssue, siteUrl: string = SITE_URL, runReport?: RunReport): string {
   const weekRange = formatWeekRange(issue.week);
   const webUrl = `${siteUrl}/newsletter/${issue.week}`;
 
@@ -121,6 +142,15 @@ export function buildEmailHtml(issue: EmailIssue, siteUrl: string = SITE_URL): s
           )
           .join('');
 
+  const reportHtml = runReport
+    ? `<div style="margin-top:24px;padding-top:16px;border-top:1px solid ${C.line};font-size:12px;line-height:1.7;color:${C.inkMuted};">
+  <div style="font-size:12px;font-weight:600;color:${C.inkSoft};margin-bottom:6px;">运行报告（仅内部）</div>
+  <div>数据源抓取：${runReport.sources.map((s) => `${esc(s.name)} ${s.fetched} 条`).join(' · ')}</div>
+  <div>AI 判相关：${runReport.relevantTotal} 条（政策 ${runReport.policyCount} · 市场 ${runReport.marketCount}）</div>
+  <div>零命中关键词（${runReport.zeroHitKeywords.length} 个）：${esc(formatZeroHit(runReport.zeroHitKeywords))}</div>
+</div>`
+    : '';
+
   return `<!doctype html>
 <html lang="zh-CN">
 <head>
@@ -157,6 +187,8 @@ export function buildEmailHtml(issue: EmailIssue, siteUrl: string = SITE_URL): s
         本邮件由 ${esc(NEWSLETTER_NAME)} 自动发送。AI 生成的摘要与解读仅供参考，请自行核实后再决策。
       </p>
     </div>
+
+    ${reportHtml}
 
   </div>
 </body>

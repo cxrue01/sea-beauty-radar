@@ -9,6 +9,7 @@ import {
   type EmailIssue,
   type EmailItem,
   type EmailMarketGroup,
+  type RunReport,
 } from './email';
 import { COUNTRY_LABEL, COUNTRY_ORDER } from './labels';
 
@@ -33,7 +34,7 @@ function groupByCountry(items: EmailItem[]): EmailMarketGroup[] {
 /** 发送某一周的周刊。没有该周数据时返回 false。 */
 export async function sendWeekIssue(
   week: string,
-  opts?: { dryRun?: boolean; dumpTo?: string },
+  opts?: { dryRun?: boolean; dumpTo?: string; runReport?: RunReport },
 ): Promise<boolean> {
   const [issue, items] = await Promise.all([
     prisma.issue.findUnique({ where: { week } }),
@@ -73,7 +74,7 @@ export async function sendWeekIssue(
   };
 
   const subject = buildSubject(issueView.issueNumber, week);
-  const html = buildEmailHtml(emailIssue);
+  const html = buildEmailHtml(emailIssue, undefined, opts?.runReport);
 
   if (opts?.dumpTo) {
     await writeFile(opts.dumpTo, html, 'utf8');

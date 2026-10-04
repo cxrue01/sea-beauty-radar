@@ -5,6 +5,7 @@ import { fetchKeyword, dedup, filterByWeek, type NewsItem } from '../lib/fetch';
 import { classifyItem } from '../lib/analyze';
 import { loadBrands } from '../lib/brands';
 import { weekOf, previousWeek } from '../lib/week';
+import { NEW_KEYWORDS } from '../config/new-keywords';
 
 const CONCURRENCY = 3;
 
@@ -21,34 +22,6 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   await Promise.all(workers);
   return out;
 }
-
-const NEW_KEYWORDS: { country: string; kw: string; meaning: string }[] = [
-  { country: 'VN', kw: 'Watsons mỹ phẩm', meaning: '屈臣氏·化妆品' },
-  { country: 'VN', kw: 'Guardian mỹ phẩm', meaning: 'Guardian·化妆品' },
-  { country: 'VN', kw: 'Hasaki', meaning: 'Hasaki 越南美妆连锁' },
-  { country: 'VN', kw: 'đại sứ thương hiệu mỹ phẩm', meaning: '美妆品牌代言人' },
-  { country: 'VN', kw: 'KOL mỹ phẩm', meaning: '美妆 KOL/达人' },
-  { country: 'ID', kw: 'Watsons kosmetik', meaning: '屈臣氏·化妆品' },
-  { country: 'ID', kw: 'Guardian kosmetik', meaning: 'Guardian·化妆品' },
-  { country: 'ID', kw: 'brand ambassador kosmetik', meaning: '化妆品品牌代言人' },
-  { country: 'ID', kw: 'kol kecantikan', meaning: '美妆 KOL/达人' },
-  { country: 'TH', kw: 'Watsons เครื่องสำอาง', meaning: '屈臣氏·化妆品' },
-  { country: 'TH', kw: 'Guardian เครื่องสำอาง', meaning: 'Guardian·化妆品' },
-  { country: 'TH', kw: 'พรีเซนเตอร์ เครื่องสำอาง', meaning: '化妆品品牌代言人' },
-  { country: 'TH', kw: 'บิวตี้บล็อกเกอร์ เครื่องสำอาง', meaning: '美妆博主/KOL' },
-  { country: 'PH', kw: 'Watsons beauty Philippines', meaning: '屈臣氏·美妆' },
-  { country: 'PH', kw: 'Guardian beauty Philippines', meaning: 'Guardian·美妆' },
-  { country: 'PH', kw: 'beauty brand ambassador Philippines', meaning: '美妆品牌代言人' },
-  { country: 'PH', kw: 'beauty influencer Philippines', meaning: '美妆达人/KOL' },
-  { country: 'MY', kw: 'Watsons kosmetik', meaning: '屈臣氏·化妆品' },
-  { country: 'MY', kw: 'Guardian kosmetik', meaning: 'Guardian·化妆品' },
-  { country: 'MY', kw: 'duta jenama kosmetik', meaning: '化妆品品牌代言人' },
-  { country: 'MY', kw: 'influencer kecantikan', meaning: '美妆达人/KOL' },
-  { country: 'SG', kw: 'Watsons beauty Singapore', meaning: '屈臣氏·美妆' },
-  { country: 'SG', kw: 'Guardian beauty Singapore', meaning: 'Guardian·美妆' },
-  { country: 'SG', kw: 'beauty brand ambassador Singapore', meaning: '美妆品牌代言人' },
-  { country: 'SG', kw: 'beauty influencer Singapore', meaning: '美妆达人/KOL' },
-];
 
 async function main() {
   const brands = await loadBrands();
