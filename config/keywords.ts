@@ -32,6 +32,11 @@ export const countries: Country[] = [
       'mỹ phẩm nhập khẩu', // 进口化妆品
       'mỹ phẩm giả', // 假冒化妆品
       'thị trường mỹ phẩm', // 化妆品市场
+      'Watsons mỹ phẩm', // 屈臣氏·化妆品（连锁药妆渠道）
+      'Guardian mỹ phẩm', // Guardian·化妆品（连锁药妆）
+      'Hasaki', // Hasaki 越南美妆连锁
+      'đại sứ thương hiệu mỹ phẩm', // 美妆品牌代言人
+      'KOL mỹ phẩm', // 美妆 KOL/达人
     ],
     policy: [
       'đăng ký mỹ phẩm', // 化妆品备案/注册
@@ -57,6 +62,10 @@ export const countries: Country[] = [
       'kosmetik TikTok Shop', // TikTok Shop 化妆品
       'promo kosmetik', // 化妆品促销
       'industri kosmetik', // 化妆品产业/市场
+      'Watsons kosmetik', // 屈臣氏·化妆品（连锁药妆渠道）
+      'Guardian kosmetik', // Guardian·化妆品（连锁药妆）
+      'brand ambassador kosmetik', // 化妆品品牌代言人
+      'kol kecantikan', // 美妆 KOL/达人
     ],
     policy: [
       'BPOM kosmetik', // 印尼食药监·化妆品
@@ -79,6 +88,10 @@ export const countries: Country[] = [
       'เครื่องสำอาง TikTok Shop', // TikTok Shop 化妆品
       'โปรโมชั่นเครื่องสำอาง', // 化妆品促销
       'ตลาดเครื่องสำอาง', // 化妆品市场
+      'Watsons เครื่องสำอาง', // 屈臣氏·化妆品（连锁药妆渠道）
+      'Guardian เครื่องสำอาง', // Guardian·化妆品（连锁药妆）
+      'พรีเซนเตอร์ เครื่องสำอาง', // 化妆品品牌代言人
+      'บิวตี้บล็อกเกอร์ เครื่องสำอาง', // 美妆博主/KOL
     ],
     policy: [
       'จดแจ้งเครื่องสำอาง', // 化妆品备案（泰国 FDA）
@@ -100,6 +113,10 @@ export const countries: Country[] = [
       'TikTok Shop beauty Philippines', // TikTok Shop 美妆·菲律宾
       'cosmetics launch Philippines', // 菲律宾化妆品上新
       'beauty market Philippines', // 化妆品市场·菲律宾
+      'Watsons beauty Philippines', // 屈臣氏·美妆·菲律宾（连锁药妆渠道）
+      'Guardian beauty Philippines', // Guardian·美妆·菲律宾（连锁药妆）
+      'beauty brand ambassador Philippines', // 美妆品牌代言人·菲律宾
+      'beauty influencer Philippines', // 美妆达人/KOL·菲律宾
     ],
     policy: [
       'FDA cosmetics Philippines', // 菲律宾食药监·化妆品
@@ -122,6 +139,10 @@ export const countries: Country[] = [
       'kosmetik TikTok Shop', // TikTok Shop 化妆品
       'promosi kosmetik', // 化妆品促销
       'pasaran kosmetik', // 化妆品市场
+      'Watsons kosmetik', // 屈臣氏·化妆品（连锁药妆渠道）
+      'Guardian kosmetik', // Guardian·化妆品（连锁药妆）
+      'duta jenama kosmetik', // 化妆品品牌代言人
+      'influencer kecantikan', // 美妆达人/KOL
     ],
     policy: [
       'NPRA kosmetik', // 马来西亚药监局·化妆品
@@ -143,6 +164,10 @@ export const countries: Country[] = [
       'TikTok Shop beauty Singapore', // TikTok Shop 美妆·新加坡
       'whitening serum Singapore', // 美白精华·新加坡
       'beauty market Singapore', // 化妆品市场·新加坡
+      'Watsons beauty Singapore', // 屈臣氏·美妆·新加坡（连锁药妆渠道）
+      'Guardian beauty Singapore', // Guardian·美妆·新加坡（连锁药妆）
+      'beauty brand ambassador Singapore', // 美妆品牌代言人·新加坡
+      'beauty influencer Singapore', // 美妆达人/KOL·新加坡
     ],
     policy: [
       'HSA cosmetics Singapore', // 新加坡卫生科学局·化妆品

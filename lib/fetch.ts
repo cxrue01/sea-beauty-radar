@@ -127,6 +127,22 @@ export async function fetchSource(source: Source): Promise<NewsItem[]> {
   return items;
 }
 
+// 抓取单个关键词（给关键词回测/报告用，独立于 sources 配置）
+export async function fetchKeyword(countryCode: string, keyword: string): Promise<NewsItem[]> {
+  const country = countries.find((c) => c.code === countryCode);
+  if (!country) return [];
+  const source: Source = {
+    id: `kw-${countryCode.toLowerCase()}`,
+    name: `关键词「${keyword}」`,
+    type: 'google_news',
+    language: country.language,
+    countries: [countryCode],
+    enabled: true,
+  };
+  const rawItems = await fetchFeed(googleNewsUrl(keyword, country.language, country.gl, country.ceid));
+  return rawItems.map((raw) => toNewsItem(raw, source, country.code));
+}
+
 // 去重：同 URL 只留一条（说明书 6.3）
 export function dedup(items: NewsItem[]): NewsItem[] {
   const seen = new Set<string>();
