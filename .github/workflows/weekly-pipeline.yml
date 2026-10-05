@@ -21,6 +21,11 @@ on:
 permissions:
   contents: write
 
+# 同组只允许一个在跑，其余排队（防止多次回补并发提交、数据打架）
+concurrency:
+  group: weekly-pipeline
+  cancel-in-progress: false
+
 jobs:
   run:
     runs-on: ubuntu-latest
