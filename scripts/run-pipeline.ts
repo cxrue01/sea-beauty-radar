@@ -131,6 +131,7 @@ async function main() {
 
   const sourceCounts: { name: string; fetched: number }[] = [];
   const fetched: NewsItem[] = [];
+  let failedSources = 0;
   for (const s of targets) {
     try {
       const items = await fetchSource(s);
@@ -138,9 +139,19 @@ async function main() {
       sourceCounts.push({ name: s.name, fetched: items.length });
       console.log(`  ✅ ${s.name}：${items.length} 条`);
     } catch (e) {
+      failedSources++;
       sourceCounts.push({ name: s.name, fetched: 0 });
       console.error(`  ❌ ${s.name} 失败：${(e as Error).message}`);
     }
+  }
+
+  // 保险：大部分数据源失败（超过一半）→ 判为失败，避免「绿勾但什么都没干」。
+  if (failedSources * 2 > targets.length) {
+    console.error(
+      `\n❌ 大部分数据源抓取失败（${failedSources}/${targets.length}），疑似被限流。本次运行判为失败，不生成周刊。`,
+    );
+    process.exitCode = 1;
+    return;
   }
 
   const deduped = dedup(fetched);

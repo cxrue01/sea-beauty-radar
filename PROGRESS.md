@@ -85,10 +85,28 @@
 11. **本地同步命令**：部署前提供 `npm run sync`，把云端提交的 prod.db 拉到本地查看。
 12. **新关键词观察 3 周**（2026-10-04）：新增的连锁/KOL 关键词先保留观察 3 周；流水线每次运行时在报告里输出各关键词的命中数，连续 3 周零命中的再删除。
 
-## 下一步：阶段 6 — 配置 GitHub Actions
+## 阶段 6：配置 GitHub Actions（进行中）
 
-- 流水线已重建（`scripts/run-pipeline.ts`），并在本地用真实数据跑通（周次按「上一个完整周」标注）。
-- 阶段 6：按说明书第 13 节配 GitHub Actions —— 周一北京时间 8 点定时 + 手动触发，密钥配成 GitHub Secrets。
+### 代码改动（已提交 GitHub）
+- `scripts/run-pipeline.ts` 加 `--week=YYYY-MM-DD`：手动指定回补周次（回补不发邮件）。
+- 数据加 `keyword` 字段（`lib/fetch.ts` + `prisma/schema.prisma`）：抓取时标记来源关键词，供命中统计用。
+- 邮件底部加「运行报告」（`lib/email.ts` / `lib/newsletter.ts`）：各源抓取条数、AI 判相关条数、政策/市场各多少、零命中关键词。**只进邮件、不进网页。**
+- 重写 `.github/workflows/weekly-pipeline.yml`：周一北京时间 8 点定时（`0 0 * * 1`）+ 手动触发（week / send）+ 跑完提交 `data/prod.db` 回仓库；加 `concurrency` 防并发（注意：不用于批量回补，每队列只留 1 个排队）。
+- `.gitignore` 放行 `data/prod.db`（其它 DB 继续忽略）。
+- 新增 `scripts/keyword-hit-report.ts`（四周命中报告）+ `config/new-keywords.ts`（25 个新关键词清单，两脚本共用）。
+
+### GitHub 侧已完成
+- 私有仓库 `github.com/cxrue01/sea-beauty-radar`；git 身份 `Rue` + GitHub 隐藏邮箱。
+- Secrets：`DEEPSEEK_API_KEY`、`RESEND_API_KEY`、`RECIPIENT_EMAIL` 已配；Variable：`NEWSLETTER_FROM` 已配（`SITE_URL` / `LLM_PROVIDER` 可选，暂走默认 localhost / deepseek）。
+- 代码已 push 到 `main`。
+
+### 回补（进行中）
+- 顺序：`2026-08-31` → `2026-09-07` → `2026-09-14` → `2026-09-21`，一周一周手动触发，`send` 取消勾选（只存数据、不发邮件）。
+- 每次只触发一周，等绿勾确认成功后再下一周（GitHub concurrency 每队列只留 1 个排队，连发会取消中间的）。
+- 8/31 距今天约一个月，Google News 大概率抓不到 → 大概率空结果（正常，非报错）。
+
+### 回补完成后待办
+- 跑 `scripts/keyword-hit-report.ts` 出四周各关键词命中数，列零命中清单 + 删词建议（配合关键决定 12「新关键词观察 3 周」）。
 
 ## 政策/市场比例排查 + 调整方案（2026-10-02，已执行）
 
@@ -136,6 +154,15 @@
 ### 存档
 - 关键词 v1 存档：`docs/keywords-v1.md`。
 - git commit `1b07cf2 关键词 v1 + 政策收紧前`（本地，未 push）。
+
+## 云端限流修复（2026-10-05，已执行）
+
+- **问题**：第一次定时自动跑（周一 8 点）时，Google News 几乎全部返回 HTML 验证页（报错 `Feed not recognized as RSS 1 or 2` / `Unquoted attribute value`），6 国 + 亿邦/36氪/雨果网（走 `site:` 搜索）全 0 条，仅白鲸出海（直连 RSS）成功，但运行仍显示绿勾。
+- **根因**：Google 对 GitHub Actions 共享 IP 间歇性限流；且 `fetchSource` 把单个关键词失败都吞掉、不抛错，导致「0 条」被当成成功。
+- **修复**：
+  - `lib/fetch.ts`：`fetchXml` 检查 HTTP 状态码（非 200 报错）；`fetchFeed` 解析失败时打印响应开头、加重试（最多 2 次，等 10s / 30s，带随机抖动）；`fetchSource` 关键词间加 2s 间隔，某国全部关键词失败时抛错。
+  - `scripts/run-pipeline.ts`：抓取结束后统计失败源数量，失败超过一半 → 退出码 1（红叉），不发邮件、不提交数据。
+- **后续**：push 后重新回补 8/31 验证。
 
 ## 待办 / 注意事项
 
