@@ -1,6 +1,6 @@
 // 关键词命中报告（基于数据库）：统计回补的四周里，每个新关键词的相关条目命中数。
 // 用法：
-//   DATABASE_URL="file:./data/prod.db" npx tsx scripts/keyword-hit-report.ts
+//   DATABASE_URL="file:../data/prod.db" npx tsx scripts/keyword-hit-report.ts
 // 命中数 = 数据库里 keyword 精确匹配的相关条目数（政策+市场都算）。
 import 'dotenv/config';
 import { prisma } from '../lib/db';
@@ -8,7 +8,7 @@ import { NEW_KEYWORDS, type NewKeyword } from '../config/new-keywords';
 import { countries } from '../config/keywords';
 import { formatWeekRange } from '../lib/week';
 
-const WEEKS = ['2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21'];
+const WEEKS = ['2026-08-31', '2026-09-07', '2026-09-14', '2026-09-21', '2026-09-28'];
 
 async function main() {
   const rows = await prisma.item.findMany({
@@ -37,7 +37,7 @@ async function main() {
 
   const countryName: Record<string, string> = Object.fromEntries(countries.map((c) => [c.code, c.name]));
 
-  console.log('===== 四周新关键词命中报告（相关条目数） =====\n');
+  console.log('===== 五周新关键词命中报告（相关条目数） =====\n');
   console.log(`周次：${WEEKS.map((w) => formatWeekRange(w)).join(' ｜ ')}\n`);
 
   const order = countries.map((c) => c.code);
@@ -62,7 +62,7 @@ async function main() {
   }
 
   console.log('===== 小结 =====');
-  console.log(`新关键词 ${unique.length} 个（去重后）里，四周零命中 ${zeroCount} 个。`);
+  console.log(`新关键词 ${unique.length} 个（去重后）里，五周零命中 ${zeroCount} 个。`);
   if (zeroList.length) console.log(`建议删除：${zeroList.join('、')}`);
   console.log('\n注：Watsons kosmetik / Guardian kosmetik 在印尼和马来共用同一词，按词去重统计。');
 }

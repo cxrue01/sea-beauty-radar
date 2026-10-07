@@ -170,6 +170,11 @@
 - **数据没存回仓库**（每次都从空库开始、永远「第 1 期」）：Prisma 的 SQLite `file:` 路径是相对 schema 文件（`prisma/`）解析的，`file:./data/prod.db` 实际写到 `prisma/data/prod.db`，而提交步骤检查根目录 `data/prod.db` → 永远「不存在，跳过提交」。改 workflow 两处 `DATABASE_URL` 为 `file:../data/prod.db`。已确认 `.gitignore` 的 `!data/prod.db` 放行有效（`git add data/prod.db` 能正常暂存）。
 - **标题合并失败**（「索引 30 重复出现」→ 整批不合并、政策虚高）：`validateClusters` 遇到重复索引就整批作废。改成容错去重（重复索引只保留第一次、不足 2 条的组丢弃）；`clusterCountry` 的 `maxTokens` 1000→4000（71 条一起喂容易超）。
 
+## 期号按日期重排 + 关键词命中报告（2026-10-07，已执行）
+
+- **期号修正**：回补时 9/14、9/21 顺序弄反，期号错位（9/14=4、9/21=3）。已用 `scripts/renumber-issues.ts` 把 prod.db 里 5 期按周次重排为 1..5；`run-pipeline.ts` 改成每次落库后按周次重排期号（不再「max+1」按运行先后）。
+- **关键词命中（5 周，25 个新关键词去重后 23 个）**：**19 个五周全零命中**（各国 Watsons/Guardian 连锁词、Hasaki、代言人/KOL 词等），建议删除；**4 个各命中 1 次**（越南 `KOL mỹ phẩm`、印尼 `kol kecantikan`、泰国 `Watsons เครื่องสำอาง`、菲律宾 `beauty brand ambassador Philippines`），暂留观察。
+
 ## 待办 / 注意事项
 
 > **视觉美化暂缓（2026-09-30）**：先暂停视觉美化，继续做阶段 5（周刊）；信号色已定香槟金 `#d6b88f`、内容宽度 1080px，后续再回来继续美化。

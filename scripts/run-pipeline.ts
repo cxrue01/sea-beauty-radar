@@ -272,14 +272,22 @@ async function main() {
   );
   const policySummary = summary?.policy_summary ?? '本周各国无重大进入政策变化。';
 
-  const maxIssue = await prisma.issue.aggregate({ _max: { issueNumber: true } });
-  const issueNumber = (maxIssue._max.issueNumber ?? 0) + 1;
-
   await prisma.issue.upsert({
     where: { week },
-    create: { week, issueNumber, top3: JSON.stringify(top3Entries), policySummary, isSample: false },
-    update: { issueNumber, top3: JSON.stringify(top3Entries), policySummary, isSample: false },
+    create: { week, issueNumber: 0, top3: JSON.stringify(top3Entries), policySummary, isSample: false },
+    update: { top3: JSON.stringify(top3Entries), policySummary, isSample: false },
   });
+
+  // 期号按周次（日期）从小到大重排，保证与运行先后无关
+  const allIssues = await prisma.issue.findMany({ where: { isSample: false }, orderBy: { week: 'asc' } });
+  let issueNumber = 0;
+  for (let i = 0; i < allIssues.length; i++) {
+    const n = i + 1;
+    if (allIssues[i].week === week) issueNumber = n;
+    if (allIssues[i].issueNumber !== n) {
+      await prisma.issue.update({ where: { id: allIssues[i].id }, data: { issueNumber: n } });
+    }
+  }
 
   const policyCount = rows.filter((r) => r.section === 'policy').length;
   const marketCount = rows.length - policyCount;
