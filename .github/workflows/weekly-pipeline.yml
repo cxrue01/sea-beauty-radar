@@ -41,7 +41,7 @@ jobs:
 
       - name: Prepare database
         env:
-          DATABASE_URL: file:./data/prod.db
+          DATABASE_URL: file:../data/prod.db
         run: |
           mkdir -p data
           npx prisma db push --skip-generate
@@ -49,7 +49,7 @@ jobs:
 
       - name: Run pipeline
         env:
-          DATABASE_URL: file:./data/prod.db
+          DATABASE_URL: file:../data/prod.db
           LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'deepseek' }}
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
@@ -59,8 +59,9 @@ jobs:
         run: |
           ARGS=""
           if [ -n "${{ inputs.week }}" ]; then ARGS="$ARGS --week=${{ inputs.week }}"; fi
-          SEND="${{ github.event_name == 'schedule' || inputs.send == 'true' }}"
-          if [ "$SEND" = "true" ]; then ARGS="$ARGS --send"; fi
+          if [ "${{ github.event_name }}" = "schedule" ] || [ "${{ inputs.send }}" = "true" ]; then
+            ARGS="$ARGS --send"
+          fi
           npx tsx scripts/run-pipeline.ts $ARGS
 
       - name: Commit database back

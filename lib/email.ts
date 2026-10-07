@@ -211,10 +211,15 @@ export async function sendIssue(
   }
 
   const apiKey = process.env.RESEND_API_KEY;
-  if (opts?.dryRun || !apiKey) {
+  if (opts?.dryRun) {
     console.log(`   DRY RUN：会发送到 ${recipient}`);
     console.log(`   主题：${subject}`);
-    console.log('   （设置 RESEND_API_KEY 后才会真正发送。）');
+    console.log('   （本次为 dry run，未真正发送。）');
+    return { sent: 0, dryRun: true };
+  }
+  if (!apiKey) {
+    console.log(`   未设置 RESEND_API_KEY，跳过发送（目标：${recipient}）。`);
+    console.log(`   主题：${subject}`);
     return { sent: 0, dryRun: true };
   }
 

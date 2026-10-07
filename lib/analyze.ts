@@ -125,11 +125,12 @@ function validateClusters(n: number): (obj: unknown) => Validation<number[][]> {
         if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v >= n) {
           return { ok: false, errors: [`索引必须是 0 到 ${n - 1} 的整数，收到 ${JSON.stringify(v)}`] };
         }
-        if (seen.has(v)) return { ok: false, errors: [`索引 ${v} 重复出现`] };
+        // 同一个索引被 AI 分进多个组：只保留第一次出现，后续跳过，不因此让整批作废
+        if (seen.has(v)) continue;
         seen.add(v);
         idxs.push(v);
       }
-      groups.push(idxs);
+      if (idxs.length >= 2) groups.push(idxs);
     }
     return { ok: true, value: groups };
   };
@@ -341,7 +342,7 @@ async function clusterCountry(list: RelevantItem[]): Promise<number[][] | null> 
       system,
       user: brief,
       validate: validateClusters(list.length),
-      maxTokens: 1000,
+      maxTokens: 4000,
     });
   } catch (error) {
     if (error instanceof LLMFatalError) throw error;

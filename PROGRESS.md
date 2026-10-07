@@ -164,6 +164,12 @@
   - `scripts/run-pipeline.ts`：抓取结束后统计失败源数量，失败超过一半 → 退出码 1（红叉），不发邮件、不提交数据。
 - **后续**：push 后重新回补 8/31 验证。
 
+## 回补后三个问题修复（2026-10-07，已执行）
+
+- **邮件变 dry run**：workflow 里 `send` 输入是 `type: boolean`，`inputs.send == 'true'` 拿布尔值比字符串、永远不成立，导致勾了「发邮件」仍不传 `--send`。改成在 shell 里判断 `[ "${{ inputs.send }}" = "true" ]`；`lib/email.ts` 把「dry run」和「没配 RESEND_API_KEY」两种提示分开，避免误报。
+- **数据没存回仓库**（每次都从空库开始、永远「第 1 期」）：Prisma 的 SQLite `file:` 路径是相对 schema 文件（`prisma/`）解析的，`file:./data/prod.db` 实际写到 `prisma/data/prod.db`，而提交步骤检查根目录 `data/prod.db` → 永远「不存在，跳过提交」。改 workflow 两处 `DATABASE_URL` 为 `file:../data/prod.db`。已确认 `.gitignore` 的 `!data/prod.db` 放行有效（`git add data/prod.db` 能正常暂存）。
+- **标题合并失败**（「索引 30 重复出现」→ 整批不合并、政策虚高）：`validateClusters` 遇到重复索引就整批作废。改成容错去重（重复索引只保留第一次、不足 2 条的组丢弃）；`clusterCountry` 的 `maxTokens` 1000→4000（71 条一起喂容易超）。
+
 ## 待办 / 注意事项
 
 > **视觉美化暂缓（2026-09-30）**：先暂停视觉美化，继续做阶段 5（周刊）；信号色已定香槟金 `#d6b88f`、内容宽度 1080px，后续再回来继续美化。
