@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { BrandTag } from '@/components/BrandTag';
 import { brandNameMap, loadBrands } from '@/lib/brands';
-import { prisma, toItemView } from '@/lib/db';
+import { toItemView } from '@/lib/view';
+import { getItemById } from '@/lib/data';
 import { COUNTRY_LABEL, IMPACT_LABEL, SECTION_LABEL } from '@/lib/labels';
 
 export const dynamic = 'force-dynamic';
@@ -11,7 +12,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
-  const row = await prisma.item.findUnique({ where: { id }, select: { oneLine: true } });
+  const row = getItemById(id);
   return { title: row?.oneLine ?? '动态详情 — beautytrend' };
 }
 
@@ -23,10 +24,8 @@ function formatPublished(value: string | null): string {
 
 export default async function ItemPage({ params }: Props) {
   const { id } = await params;
-  const [brands, row] = await Promise.all([
-    loadBrands(),
-    prisma.item.findUnique({ where: { id } }),
-  ]);
+  const brands = await loadBrands();
+  const row = getItemById(id);
 
   if (!row) notFound();
   const item = toItemView(row, brandNameMap(brands));

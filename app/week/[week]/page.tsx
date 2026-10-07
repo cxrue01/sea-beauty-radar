@@ -4,7 +4,8 @@ import { ItemCard } from '@/components/ItemCard';
 import { Filters } from '@/components/Filters';
 import { WeekSwitcher } from '@/components/WeekSwitcher';
 import { brandNameMap, loadBrands } from '@/lib/brands';
-import { prisma, toItemView, toIssueView } from '@/lib/db';
+import { toItemView, toIssueView } from '@/lib/view';
+import { getItemsByWeek, getIssueByWeek, getWeekBounds } from '@/lib/data';
 import { COUNTRY_LABEL } from '@/lib/labels';
 import { formatWeekRange } from '@/lib/week';
 import { groupByCountry, matches, type FilterState } from '@/lib/items';
@@ -50,19 +51,17 @@ export default async function WeekPage({ params, searchParams }: Props) {
     brand: asString(sp.brand),
   };
 
-  const [brands, issue, items, bounds] = await Promise.all([
-    loadBrands(),
-    prisma.issue.findUnique({ where: { week } }),
-    prisma.item.findMany({ where: { week }, orderBy: { createdAt: 'asc' } }),
-    prisma.item.aggregate({ _min: { week: true }, _max: { week: true } }),
-  ]);
+  const brands = await loadBrands();
+  const issue = getIssueByWeek(week);
+  const items = getItemsByWeek(week);
+  const bounds = getWeekBounds();
 
   if (items.length === 0 && !issue) notFound();
 
   const brandMap = brandNameMap(brands);
   const all = items.map((r) => toItemView(r, brandMap));
-  const latestWeek = bounds._max.week ?? week;
-  const earliestWeek = bounds._min.week ?? week;
+  const latestWeek = bounds.max ?? week;
+  const earliestWeek = bounds.min ?? week;
 
   const filtered = all.filter((it) => matches(it, filters));
   const policyItems = filtered

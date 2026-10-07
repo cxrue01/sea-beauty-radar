@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { brandNameMap, loadBrands } from '@/lib/brands';
-import { prisma, toItemView, toIssueView, type ItemView } from '@/lib/db';
+import { toItemView, toIssueView, type ItemView } from '@/lib/view';
+import { getItemsByWeek, getIssueByWeek } from '@/lib/data';
 import { COUNTRY_LABEL, COUNTRY_ORDER, IMPACT_LABEL } from '@/lib/labels';
 import { NEWSLETTER_NAME } from '@/lib/site';
 import { formatWeekRange } from '@/lib/week';
@@ -26,17 +27,15 @@ function groupByCountry(items: ItemView[]): { code: string; items: ItemView[] }[
 
 export async function generateMetadata({ params }: Props) {
   const { week } = await params;
-  const issue = await prisma.issue.findUnique({ where: { week }, select: { issueNumber: true } });
+  const issue = getIssueByWeek(week);
   return { title: issue ? `${NEWSLETTER_NAME} · 第 ${issue.issueNumber} 期` : NEWSLETTER_NAME };
 }
 
 export default async function IssuePage({ params }: Props) {
   const { week } = await params;
-  const [brands, issue, items] = await Promise.all([
-    loadBrands(),
-    prisma.issue.findUnique({ where: { week } }),
-    prisma.item.findMany({ where: { week }, orderBy: { createdAt: 'asc' } }),
-  ]);
+  const brands = await loadBrands();
+  const issue = getIssueByWeek(week);
+  const items = getItemsByWeek(week);
 
   if (!issue) notFound();
   const issueView = toIssueView(issue);

@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { ItemCard } from '@/components/ItemCard';
 import { Filters } from '@/components/Filters';
 import { brandNameMap, loadBrands } from '@/lib/brands';
-import { prisma, toItemView } from '@/lib/db';
+import { toItemView } from '@/lib/view';
+import { getItemsFromWeek } from '@/lib/data';
 import { COUNTRY_LABEL, SECTION_LABEL } from '@/lib/labels';
 import { weeksAgo } from '@/lib/week';
 import { groupByCountry, matches, sortNewest, type FilterState } from '@/lib/items';
@@ -48,13 +49,8 @@ export default async function OverviewPage({ searchParams }: Props) {
 
   const cutoff = range === '4w' ? weeksAgo(3) : range === '3m' ? weeksAgo(13) : undefined;
 
-  const [brands, rows] = await Promise.all([
-    loadBrands(),
-    prisma.item.findMany({
-      where: cutoff ? { week: { gte: cutoff } } : undefined,
-      orderBy: { week: 'desc' },
-    }),
-  ]);
+  const brands = await loadBrands();
+  const rows = getItemsFromWeek(cutoff);
 
   const brandMap = brandNameMap(brands);
   const all = rows.map((r) => toItemView(r, brandMap));

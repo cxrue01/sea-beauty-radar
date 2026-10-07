@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { prisma, toIssueView } from '@/lib/db';
+import { toIssueView } from '@/lib/view';
+import { getAllIssues } from '@/lib/data';
 import { NEWSLETTER_NAME } from '@/lib/site';
 import { formatWeekRange } from '@/lib/week';
 
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: `往期周刊 — ${NEWSLETTER_NAME}` };
 
 export default async function NewsletterIndex() {
-  const issues = (await prisma.issue.findMany({ orderBy: { week: 'desc' } })).map(toIssueView);
+  const issues = getAllIssues().map(toIssueView);
 
   return (
     <div className="mx-auto max-w-prose px-6 py-16">
