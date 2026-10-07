@@ -173,7 +173,16 @@
 ## 期号按日期重排 + 关键词命中报告（2026-10-07，已执行）
 
 - **期号修正**：回补时 9/14、9/21 顺序弄反，期号错位（9/14=4、9/21=3）。已用 `scripts/renumber-issues.ts` 把 prod.db 里 5 期按周次重排为 1..5；`run-pipeline.ts` 改成每次落库后按周次重排期号（不再「max+1」按运行先后）。
-- **关键词命中（5 周，25 个新关键词去重后 23 个）**：**19 个五周全零命中**（各国 Watsons/Guardian 连锁词、Hasaki、代言人/KOL 词等），建议删除；**4 个各命中 1 次**（越南 `KOL mỹ phẩm`、印尼 `kol kecantikan`、泰国 `Watsons เครื่องสำอาง`、菲律宾 `beauty brand ambassador Philippines`），暂留观察。
+- **关键词命中（5 周，25 个新关键词去重后 23 个）**：
+  - **19 个五周全零命中（暂不删，以后再决定）**：
+    - 越南：`Watsons mỹ phẩm`、`Guardian mỹ phẩm`、`Hasaki`、`đại sứ thương hiệu mỹ phẩm`
+    - 印尼：`Watsons kosmetik`、`Guardian kosmetik`、`brand ambassador kosmetik`
+    - 泰国：`Guardian เครื่องสำอาง`、`พรีเซนเตอร์ เครื่องสำอาง`、`บิวตี้บล็อกเกอร์ เครื่องสำอาง`
+    - 菲律宾：`Watsons beauty Philippines`、`Guardian beauty Philippines`、`beauty influencer Philippines`
+    - 马来：`duta jenama kosmetik`、`influencer kecantikan`
+    - 新加坡：`Watsons beauty Singapore`、`Guardian beauty Singapore`、`beauty brand ambassador Singapore`、`beauty influencer Singapore`
+    - 注：`Watsons kosmetik` / `Guardian kosmetik` 在印尼和马来共用同一词。
+  - **4 个各命中 1 次（暂留观察）**：越南 `KOL mỹ phẩm`、印尼 `kol kecantikan`、泰国 `Watsons เครื่องสำอาง`、菲律宾 `beauty brand ambassador Philippines`。
 
 ## 待办 / 注意事项
 
