@@ -13,7 +13,7 @@ type Props = { params: Promise<{ id: string }> };
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
   const row = getItemById(id);
-  return { title: row?.oneLine ?? '动态详情 — beautytrend' };
+  return { title: row?.oneLine ?? '动态详情 — SEA Beauty Radar' };
 }
 
 function formatPublished(value: string | null): string {

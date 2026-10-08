@@ -1,6 +1,6 @@
-# beautytrend — 东南亚美妆出海雷达
+# SEA Beauty Radar — 东南亚美妆出海雷达
 
-每周自动抓取东南亚 6 国（越南优先）当地语言的美妆新闻，用 AI 筛选、分类并翻译成中文，做成商业情报 Dashboard 和每周邮件周刊 `sensebeauty周报`。
+每周自动抓取东南亚 6 国（越南优先）当地语言的美妆新闻，用 AI 筛选、分类并翻译成中文，做成商业情报 Dashboard 和每周邮件周刊 `SEA Beauty Radar 周报`。
 
 > 本项目基于 [learn-from-github](https://github.com/viviannnl/learn-from-github) 改造。原项目抓取 GitHub Trending 做 AI 分析；本项目保留了它的整体架构（数据管道 + Dashboard + 周刊 + GitHub Actions 定时运行），把数据源从 GitHub 换成了东南亚美妆新闻。
 
@@ -44,7 +44,7 @@ npx tsx scripts/test-analyze.ts      # AI 筛选/分类/解读小批量测试
 
 ```
 Google News（6 国当地语言）+ 中文出海媒体 + 行业媒体
-  → 统一格式 + 去重 + 7 天过滤
+  → 统一格式 + 去重 + 上一个完整周过滤
   → AI 筛选分类（丢掉无关的）
   → AI 三段式解读（只对相关的）
   → 存入 SQLite

@@ -1,4 +1,4 @@
-# Design — beautytrend 东南亚美妆出海雷达
+# Design — SEA Beauty Radar 东南亚美妆出海雷达
 
 <!-- impeccable:design-schema 1 -->
 
@@ -26,7 +26,7 @@
 ## Typography
 
 - **无衬线（UI / 扫描 / 数字）**：系统 `-apple-system`（Mac 上渲染为 SF Pro）。用于正文、标签、导航、数字、按钮。
-- **衬线（阅读时刻）**：系统 `New York`，回退 `Georgia`。用于品牌字标 `beautytrend`、日期大标题、所有区块标题、以及「本周 3 件事」的导读序号与正文。正文与标签仍用无衬线。
+- **衬线（阅读时刻）**：系统 `New York`，回退 `Georgia`。用于品牌字标 `SEA Beauty Radar`、日期大标题、所有区块标题、以及「本周 3 件事」的导读序号与正文。正文与标签仍用无衬线。
 - 数字（日期范围、条数、期号）用等宽数字 `.tnum`（`font-variant-numeric: tabular-nums`）。
 - 中文类别标签**不用** `uppercase` / `tracking-wider`（对中文无效），改用小号 `font-semibold text-accent`。
 
