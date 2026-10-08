@@ -8,13 +8,12 @@
 
 ## 下一步（按顺序）
 
-1. 部署上线（仓库保持私有）
-2. 写 README
-3. 公开前检查
-4. 公开仓库
-5. 网页美化
+1. 写 README（附网页截图、周刊截图、演示视频）
+2. 公开前检查
+3. 公开仓库
+4. 网页美化
 
-> 注：10/12 是第一次自动运行（周一 8 点定时），需确认是否收到周刊。
+> 注：10/12 是第一次自动运行（周一 8 点定时），需确认：网站自动更新、收到周刊、邮件里的「查看解读」链接能打开。
 
 ## 已完成
 
@@ -194,6 +193,14 @@
     - 新加坡：`Watsons beauty Singapore`、`Guardian beauty Singapore`、`beauty brand ambassador Singapore`、`beauty influencer Singapore`
     - 注：`Watsons kosmetik` / `Guardian kosmetik` 在印尼和马来共用同一词。
   - **4 个各命中 1 次（暂留观察）**：越南 `KOL mỹ phẩm`、印尼 `kol kecantikan`、泰国 `Watsons เครื่องสำอาง`、菲律宾 `beauty brand ambassador Philippines`。
+
+## 部署上线（Vercel）✅（2026-10-07，已执行）
+
+- 免费部署到 Vercel：`https://sea-beauty-radar.vercel.app`，已显示 5 周真实数据（8/31–9/28），仓库保持私有。
+- **踩坑**：Vercel 是无服务器环境，运行时读不了 SQLite（报 `Error code 14: Unable to open the database file`）。改为「构建时把 `data/prod.db` 导出成 JSON 快照，运行时读 JSON」：新增 `scripts/export-data.ts`、`lib/data.ts`（页面数据层）、`lib/view.ts`（纯函数，从 `lib/db.ts` 拆出），6 个页面改用 `lib/data` 查询；`package.json` 的 build 加导出步骤，加 `predev` / `export:data`。
+- 数据每周自动更新：周一机器人提交 prod.db → Vercel 检测到 push 自动重新部署 → 新一周上线。
+- `SITE_URL` 已在 GitHub Variables 设为线上网址（邮件「查看解读」链接会指向线上页面）。
+- 验证：类型检查、生产构建、生产模式页面（首页跳最新周、周页真实数据、详情页三段式）均通过。
 
 ## 待办 / 注意事项
 
