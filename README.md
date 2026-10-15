@@ -78,6 +78,57 @@ npm run dev                 # http://localhost:3000
 
 没有任何 API key 时，`npm run seed:demo` 会插入两周虚构的示例数据（品牌都是「示例品牌A」这类假名），网页就能完整演示周切换、筛选、详情页和往期周刊。
 
+## 部署你自己的版本
+
+想把这份雷达部署成你自己的线上版本，跟着下面 5 步走，全程约 20 分钟，不需要买服务器或域名（Vercel 免费，仓库可以保持私有）。
+
+### 第 1 步：Fork 仓库
+
+在 GitHub 打开本仓库，点右上角 **Fork**，复制到你的账号下。之后所有操作都在你的 Fork 里做。
+
+### 第 2 步：准备 key
+
+| Key | 用途 | 是否必填 | 在哪申请 |
+|---|---|---|---|
+| **DeepSeek key** | AI 筛选 / 分类 / 解读的「钥匙」 | ✅ 必填 | <https://platform.deepseek.com>，充值少量余额后创建 API key |
+| **Resend key** | 发邮件周刊的「钥匙」 | ⚪ 可选 | <https://resend.com>（不配也能跑，只是不发真邮件、只在日志里演练） |
+
+### 第 3 步：在 GitHub 配置 Secrets 和 Variables
+
+进你的 Fork → **Settings** → **Secrets and variables** → **Actions**。
+
+**Secrets（密钥，GitHub 帮你保密，填完只显示成小圆点）：**
+
+| 名称 | 填什么 | 是否必填 |
+|---|---|---|
+| `DEEPSEEK_API_KEY` | 第 2 步的 DeepSeek key | ✅ 必填 |
+| `RECIPIENT_EMAIL` | 收周报的邮箱 | ⚪ 发邮件才需要 |
+| `RESEND_API_KEY` | 第 2 步的 Resend key | ⚪ 发邮件才需要 |
+
+**Variables（变量，普通配置，不保密）：**
+
+| 名称 | 填什么 | 是否必填 |
+|---|---|---|
+| `SITE_URL` | 你的线上网址（第 4 步部署完拿到，形如 `https://你的用户名-sea-beauty-radar.vercel.app`） | ⚪ 建议填（不填邮件里的「查看解读」链接指向 localhost） |
+| `NEWSLETTER_FROM` | 发件人地址（Resend 验证域名后的地址） | ⚪ 发邮件才需要 |
+| `LLM_PROVIDER` | `deepseek`（默认就是它，一般不用动） | ⚪ 可选 |
+
+### 第 4 步：部署到 Vercel
+
+1. 用 GitHub 账号登录 <https://vercel.com>。
+2. 点 **Add New → Project**，选中刚 Fork 的仓库，一路 **Deploy**（Vercel 会自动识别这是 Next.js 项目）。
+3. 部署完拿到一个网址（`https://xxx.vercel.app`），把它填回第 3 步的 `SITE_URL`。
+
+### 第 5 步：在 Actions 手动触发一次验证
+
+1. 进你的 Fork → **Actions** → 左侧选 **Weekly pipeline** → 点 **Run workflow** → 直接点绿色 **Run workflow**（week 留空，会自动抓上一个完整周）。
+2. 等它跑完看到绿色 ✓（几分钟到十几分钟）。
+3. 验证：打开你的 Vercel 网址能看到刚生成的一周数据；配了 Resend key 的话邮箱会收到本周刊，没配的话点进那次运行看日志，能看到演练的邮件内容。
+
+以后每周一早上 8 点（北京时间）自动跑，不用再手动操作。
+
+> **国内网络提醒：** ① **本地运行**抓新闻需要代理（Google News 在国内访问不了，在 `.env` 里填 `HTTPS_PROXY`）；② **GitHub Actions 和 Vercel** 跑在海外服务器，不需要代理；③ 但**你自己在国内打开 Vercel 网页**时，`vercel.app` 可能被墙，需要自备代理。
+
 ## 已知局限
 
 - 免费 Vercel 部署在中国大陆访问不稳定（`vercel.app` 可能被墙），面试官在国内时需自备代理。
@@ -88,6 +139,10 @@ npm run dev                 # http://localhost:3000
 
 本项目由我（Rue）以产品经理的身份写需求和验收标准，借助 Claude Code 完成开发。需求见 `SPEC.md`、进度与关键决定见 `PROGRESS.md`、设计规范见 `DESIGN.md`。
 
+## 开源协议
+
+本项目以 MIT 协议开源，可直接使用。版权归 Rue（2026），详见 [LICENSE](LICENSE)。
+
 ## 致谢
 
-基于开源项目 [learn-from-github](https://github.com/viviannnl/learn-from-github) 改造。保留了它的整体架构（数据管道 + Dashboard + 周刊 + GitHub Actions 定时运行），把数据源从 GitHub Trending 换成了东南亚美妆新闻。感谢原项目作者。
+架构参考开源项目 [learn-from-github](https://github.com/viviannnl/learn-from-github)（数据管道 + 周刊 + 定时运行的整体结构）。产品定位、数据源、分类体系、AI 分析流程、品牌名单、网页和邮件设计均为本项目重新设计。
