@@ -146,3 +146,9 @@ npm run dev                 # http://localhost:3000
 ## 致谢
 
 架构参考开源项目 [learn-from-github](https://github.com/viviannnl/learn-from-github)（数据管道 + 周刊 + 定时运行的整体结构）。产品定位、数据源、分类体系、AI 分析流程、品牌名单、网页和邮件设计均为本项目重新设计。
+
+## 联系方式 / Contact
+
+作者：Xueru Chang（Rue）
+
+邮箱：cxrue01 [at] gmail [dot] com
